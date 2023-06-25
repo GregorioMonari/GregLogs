@@ -22,7 +22,7 @@ export class GregLogs{
     public constructor(config_path:string|null|undefined) {
       var path:string;
       if(config_path == null || config_path== undefined ){
-        path="../resources/logger_config.json";
+        path="./resources/logger_config.json";
       }else{
         path=config_path;
       }
