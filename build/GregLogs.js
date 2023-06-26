@@ -23,24 +23,55 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GregLogs = void 0;
 const fs = __importStar(require("fs"));
 class GregLogs {
     constructor(config_path) {
         var path;
         if (config_path == null || config_path == undefined) {
-            path = "../resources/logger_config.json";
+            path = "./resources/logger_config.json";
         }
         else {
             path = config_path;
         }
-        let config = this.getConfigFromFile(path);
+        let config;
+        try {
+            config = this.getConfigFromFile(path);
+        }
+        catch (e) {
+            console.error("Error loading config file, using default logger configuration");
+            config = {
+                "logLevel": 1,
+                "separator": " | ",
+                "divLogger": {
+                    "enabled": false,
+                    "logLevel": 0,
+                    "elementId": "console"
+                }
+            };
+        }
         this._logLevel = config.logLevel;
         this._separator = config.separator;
         this._divLoggerEnabled = config.divLogger.enabled;
         this._divLoggerlogLevel = config.divLogger.logLevel;
         this._divLoggerElementId = config.divLogger.elementId;
         this._colorMap = this.generateColorsMap();
+    }
+    static getInstance(filePath) {
+        if (!GregLogs.instance) {
+            GregLogs.instance = new GregLogs(filePath);
+        }
+        return GregLogs.instance;
+    }
+    setLogLevel(n) {
+        this._logLevel = n;
+    }
+    setConfigFromFile(filename) {
+        let config = this.getConfigFromFile(filename);
+        this._logLevel = config.logLevel;
+        this._separator = config.separator;
+        this._divLoggerEnabled = config.divLogger.enabled;
+        this._divLoggerlogLevel = config.divLogger.logLevel;
+        this._divLoggerElementId = config.divLogger.elementId;
     }
     getConfigFromFile(fileName) {
         let file = fs.readFileSync(fileName);
@@ -95,27 +126,27 @@ class GregLogs {
     }
     trace(...text) {
         if (this.logLevel < 1) {
-            console.log(get_current_timestamp() + this.separator + "[trace] ", ...text);
+            console.log(get_current_timestamp() + this.separator + "[trace]", ...text);
         }
     }
     debug(...text) {
         if (this.logLevel < 2) {
-            console.log(get_current_timestamp() + this.separator + "[debug] ", ...text);
+            console.log(get_current_timestamp() + this.separator + "[debug]", ...text);
         }
     }
     info(...text) {
         //var string=this.info.caller.name
         if (this.logLevel < 3) {
-            console.log(get_current_timestamp() + this.separator + "[info] ", ...text);
+            console.log(get_current_timestamp() + this.separator + "[info ]", ...text);
         }
     }
     warning(...text) {
         if (this.logLevel < 4) {
-            console.log(get_current_timestamp() + this.separator + "[WARNING] ", ...text);
+            console.log(get_current_timestamp() + this.separator + "[warning]", ...text);
         }
     }
     error(...text) {
-        console.log(get_current_timestamp() + this.separator + "[" + this.wrapColor("red", "ERROR") + "]" +
+        console.log(get_current_timestamp() + this.separator + "[" + this.wrapColor("red", "error") + "]" +
             this.colorMap["red"], text, this.colorMap["nocolor"]);
     }
     //Utils
@@ -156,7 +187,6 @@ class GregLogs {
         }
     }
 }
-exports.GregLogs = GregLogs;
 //----------------------
 //NAME: GET CURRENT TIME
 //DESCRIPTION: returns the current formatted time
@@ -167,3 +197,6 @@ function get_current_timestamp() {
     //console.log(stringa)
     return timestamp[0] + " " + timestamp[1].slice(0, timestamp[1].length - 1);
 } //get_current_timestamp()
+//!CREATE STATIC LOGGER
+const log = GregLogs.getInstance("./resources/logger_config.json");
+exports.default = log;

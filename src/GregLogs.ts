@@ -10,8 +10,8 @@ interface GregLogsConfig {
   }
 }
 
-export class GregLogs{
-
+class GregLogs{
+    private static instance: GregLogs;
     private _logLevel: number;
     private _separator: string;
     private _divLoggerEnabled:boolean;
@@ -26,13 +26,48 @@ export class GregLogs{
       }else{
         path=config_path;
       }
-      let config: GregLogsConfig= this.getConfigFromFile(path);
+
+      let config: GregLogsConfig;
+      try{
+        config=this.getConfigFromFile(path);
+      }catch(e){
+        console.error("Error loading config file, using default logger configuration")
+        config={
+          "logLevel":1,
+          "separator":" | ",
+          "divLogger":{
+              "enabled":false,
+              "logLevel":0,
+              "elementId":"console"
+          }
+        }
+      }
       this._logLevel = config.logLevel
       this._separator= config.separator
       this._divLoggerEnabled=config.divLogger.enabled
       this._divLoggerlogLevel=config.divLogger.logLevel
       this._divLoggerElementId=config.divLogger.elementId
       this._colorMap=this.generateColorsMap();
+    }
+
+    public static getInstance(filePath: string): GregLogs{
+      if(!GregLogs.instance){
+        GregLogs.instance = new GregLogs(filePath);
+      }
+      return GregLogs.instance
+    }
+
+    public setLogLevel(n:number):void{
+      this._logLevel=n
+    }
+
+    public setConfigFromFile(filename:string):void{
+      let config: GregLogsConfig=this.getConfigFromFile(filename);
+      this._logLevel = config.logLevel
+      this._separator= config.separator
+      this._divLoggerEnabled=config.divLogger.enabled
+      this._divLoggerlogLevel=config.divLogger.logLevel
+      this._divLoggerElementId=config.divLogger.elementId
     }
 
     private getConfigFromFile(fileName:string): GregLogsConfig{
@@ -95,27 +130,27 @@ export class GregLogs{
   
     public trace(...text: (string|number|object)[]): void{
       if(this.logLevel<1){
-        console.log(get_current_timestamp()+this.separator+"[trace] ",...text);
+        console.log(get_current_timestamp()+this.separator+"[trace]",...text);
       }      
     }
     public debug(...text: (string|number|object)[]): void{
       if(this.logLevel<2){
-        console.log(get_current_timestamp()+this.separator+"[debug] ",...text);
+        console.log(get_current_timestamp()+this.separator+"[debug]",...text);
       }
     }
     public info(...text: (string|number|object)[]): void{
       //var string=this.info.caller.name
       if(this.logLevel<3){
-        console.log(get_current_timestamp()+this.separator+"[info] ",...text);
+        console.log(get_current_timestamp()+this.separator+"[info ]",...text);
       }
     }
     public warning(...text: (string|number|object)[]): void{
       if(this.logLevel<4){
-        console.log(get_current_timestamp()+this.separator+"[WARNING] ",...text);
+        console.log(get_current_timestamp()+this.separator+"[warning]",...text);
       }
     }
     error(...text: (string|number|object)[]): void{
-      console.log(get_current_timestamp()+this.separator+"["+this.wrapColor("red","ERROR")+"]"+
+      console.log(get_current_timestamp()+this.separator+"["+this.wrapColor("red","error")+"]"+
       this.colorMap["red"],text,this.colorMap["nocolor"]);
     }
 
@@ -179,4 +214,6 @@ export class GregLogs{
 
 
 
-
+//!CREATE STATIC LOGGER
+const log = GregLogs.getInstance("./resources/logger_config.json")
+export default log;
